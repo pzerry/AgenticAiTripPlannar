@@ -2,7 +2,7 @@
 
 from langchain.tools import tool
 
-from Integrations.activity_client import ActivityClient
+from integrations.activity_client import ActivityClient
 
 activity_client = ActivityClient()
 
@@ -11,40 +11,22 @@ activity_client = ActivityClient()
 async def search_activities(
     query: str,
     location: str | None = None,
-):
+) -> list[dict]:
     """
-    Search TripAdvisor destinations and attractions.
+    Search TripAdvisor for attractions, restaurants, museums,
+    landmarks, and other places of interest.
 
     Args:
-        query: Place or attraction to search.
-        location: Optional city or country.
+        query: Name or keyword of the place to search.
+        location: Optional city, region, or country to narrow the search.
 
     Returns:
-        List of matching places.
+        A list of matching places with summary information.
     """
-    results = await activity_client.search_places(
+
+    places = await activity_client.search_places(
         query=query,
         location=location,
     )
 
-    return [place.model_dump() for place in results]
-
-
-@tool
-async def get_activity_details(
-    place_id: str,
-):
-    """
-    Retrieve detailed TripAdvisor information for a place.
-
-    Args:
-        place_id: TripAdvisor place identifier.
-
-    Returns:
-        Destination or attraction details.
-    """
-    details = await activity_client.get_place_details(
-        place_id=place_id,
-    )
-
-    return details.model_dump()
+    return [place.model_dump() for place in places]

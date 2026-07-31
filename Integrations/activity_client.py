@@ -10,15 +10,12 @@ from Exceptions import (
     ActivityAPIError,
     ConfigurationError,
 )
-from Logger import logger
-from Schemas.activity_schema import (
-    PlaceDetails,
-    PlaceSummary,
-    NearbyPlace,
-    OperatingHours,
-)
+from Logger.logger import get_logger
+from Schemas.activity_schema import PlaceSummary
 
 load_dotenv()
+
+logger = get_logger(__name__)
 
 
 class ActivityClient:
@@ -28,11 +25,11 @@ class ActivityClient:
         self.base_url = config["activity"]["base_url"]
         self.timeout = config["activity"]["timeout"]
 
-        self.api_key = os.getenv("SERPAPI_API_KEY")
+        self.api_key = os.getenv("SERP_API_KEY")
 
         if not self.api_key:
             raise ConfigurationError(
-                "SERPAPI_API_KEY environment variable is not set."
+                "SERP_API_KEY environment variable is not set."
             )
 
     async def search_places(
@@ -50,18 +47,6 @@ class ActivityClient:
         data = await self._make_request(params)
 
         return self._parse_search(data)
-
-    async def get_place_details(
-        self,
-        place_id: str,
-    ) -> PlaceDetails:
-        """Retrieve detailed information about a place."""
-
-        params = self._build_detail_params(place_id)
-
-        data = await self._make_request(params)
-
-        return self._parse_details(data)
 
     def _build_search_params(
         self,
@@ -81,18 +66,6 @@ class ActivityClient:
 
         return params
 
-    def _build_detail_params(
-        self,
-        place_id: str,
-    ) -> dict:
-        """Build place details request parameters."""
-
-        return {
-            "engine": "tripadvisor_place",
-            "place_id": place_id,
-            "api_key": self.api_key,
-        }
-
     async def _make_request(
         self,
         params: dict,
@@ -100,7 +73,9 @@ class ActivityClient:
         """Send request to SerpAPI."""
 
         try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
+            async with httpx.AsyncClient(
+                timeout=self.timeout,
+            ) as client:
                 response = await client.get(
                     self.base_url,
                     params=params,
@@ -134,82 +109,19 @@ class ActivityClient:
     ) -> list[PlaceSummary]:
         """Parse search response."""
 
-        results = []
-
-        for item in data.get("data", []):
-
-            results.append(
-                PlaceSummary(
-                    place_id=item.get("place_id", ""),
-                    name=item.get("name", ""),
-                    category=item.get("type"),
-                    rating=item.get("rating"),
-                    reviews=item.get("reviews"),
-                    address=item.get("address"),
-                )
-            )
-
-        return results
-
-    def _parse_details(
-        self,
-        data: dict,
-    ) -> PlaceDetails:
-        """Parse place details response."""
-
-        place = data.get("place_result", {})
-
-        opening_hours = [
-            OperatingHours(
-                day=hour.get("day", ""),
-                hours=hour.get("hours", ""),
-            )
-            for hour in place.get("opening_hours", [])
-        ]
-
-        nearby_hotels = [
-            NearbyPlace(
+        return [
+            PlaceSummary(
                 place_id=item.get("place_id", ""),
-                name=item.get("name", ""),
+                name=item.get("title", ""),
+                category=item.get("place_type"),
                 rating=item.get("rating"),
                 reviews=item.get("reviews"),
+                address=item.get("location"),
+                description=item.get("description"),
+                thumbnail=item.get("thumbnail"),
             )
-            for item in place.get("nearby_hotels", [])
+            for item in data.get("places", [])
         ]
 
-        nearby_restaurants = [
-            NearbyPlace(
-                place_id=item.get("place_id", ""),
-                name=item.get("name", ""),
-                rating=item.get("rating"),
-                reviews=item.get("reviews"),
-            )
-            for item in place.get("nearby_restaurants", [])
-        ]
 
-        nearby_attractions = [
-            NearbyPlace(
-                place_id=item.get("place_id", ""),
-                name=item.get("name", ""),
-                rating=item.get("rating"),
-                reviews=item.get("reviews"),
-            )
-            for item in place.get("nearby_attractions", [])
-        ]
-
-        return PlaceDetails(
-            place_id=place.get("place_id", ""),
-            name=place.get("name", ""),
-            category=place.get("type"),
-            rating=place.get("rating"),
-            reviews=place.get("reviews"),
-            address=place.get("address"),
-            website=place.get("website"),
-            phone=place.get("phone"),
-            description=place.get("description"),
-            opening_hours=opening_hours,
-            images=place.get("images", []),
-            nearby_hotels=nearby_hotels,
-            nearby_restaurants=nearby_restaurants,
-            nearby_attractions=nearby_attractions,
-        )
+activity_client = ActivityClient()

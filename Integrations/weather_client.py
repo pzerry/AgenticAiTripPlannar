@@ -2,16 +2,19 @@ import os
 
 import httpx
 from dotenv import load_dotenv
-from Logger import logger
+
 from Config import config
 from Exceptions import ConfigurationError, WeatherAPIError
+from Logger.logger import get_logger
 from Schemas.weather_schema import WeatherResponse
 
 load_dotenv()
 
+logger = get_logger(__name__)
+
 
 class WeatherClient:
-    """Client for interacting with the OpenWeather API."""
+    """Client for interacting with the OpenWeather Current Weather API."""
 
     def __init__(self):
         self.base_url = config["weather"]["base_url"]
@@ -28,7 +31,7 @@ class WeatherClient:
         self,
         city: str,
     ) -> WeatherResponse:
-        """Fetch current weather for a city."""
+        """Fetch current weather."""
 
         url = f"{self.base_url}/weather"
 
@@ -49,30 +52,36 @@ class WeatherClient:
 
         except httpx.TimeoutException as e:
             logger.exception("OpenWeather request timed out.")
-            raise WeatherAPIError("Weather service timed out.") from e
+            raise WeatherAPIError(
+                "Weather service timed out."
+            ) from e
 
         except httpx.HTTPStatusError as e:
             logger.exception("OpenWeather returned an error.")
-            raise WeatherAPIError("Weather service returned an invalid response.") from e
+            raise WeatherAPIError(
+                "Weather service returned an invalid response."
+            ) from e
 
         except httpx.RequestError as e:
             logger.exception("Unable to connect to OpenWeather.")
-            raise WeatherAPIError("Unable to connect to weather service.") from e
-
-        response.raise_for_status()
+            raise WeatherAPIError(
+                "Unable to connect to weather service."
+            ) from e
 
         data = response.json()
 
+        weather = data["weather"][0]
+
         return WeatherResponse(
-            city=data["name"],
-            country=data["sys"]["country"],
+            location=data["name"],
             temperature=data["main"]["temp"],
             feels_like=data["main"]["feels_like"],
+            weather=weather["main"],
+            description=weather["description"],
             humidity=data["main"]["humidity"],
-            pressure=data["main"]["pressure"],
-            weather=data["weather"][0]["main"],
-            description=data["weather"][0]["description"],
-            wind_speed=data["wind"]["speed"],
+            visibility=data.get("visibility", 10000),
+            sunrise=data["sys"]["sunrise"],
+            sunset=data["sys"]["sunset"],
         )
 
 

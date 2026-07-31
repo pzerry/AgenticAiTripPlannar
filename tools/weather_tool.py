@@ -1,15 +1,24 @@
 from langchain_core.tools import tool
-from Integrations.weather import weather_client
+
+from integrations.weather_client import weather_client
+
 
 @tool
-async def get_current_weather(city: str,) -> dict:
+async def get_current_weather(city: str) -> dict:
     """
-    Get the current weather for a city.
+    Retrieve the current weather conditions for a destination city.
+
+    This tool returns weather information useful for itinerary planning,
+    including temperature, perceived temperature, weather conditions,
+    visibility, humidity, and sunrise/sunset times.
 
     Args:
-        city: Name of the city.
+        city: Destination city name.
+
+    Returns:
+        A dictionary containing the current weather details.
     """
 
-    weather = await weather_client.get_current_weather(city)
+    weather_response = await weather_client.get_current_weather(city)
 
-    return weather.model_dump()
+    return weather_response.model_dump()

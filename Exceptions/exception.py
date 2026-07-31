@@ -96,9 +96,18 @@ class PlacesToolError(ToolError):
 # ==========================================================
 # External API
 # ==========================================================
+class APIError(TravelPlannerError):
+    """
+    Base exception for all tool-related failures.
+    """
+    pass
 
 class WeatherAPIError(APIError):
     """Raised when the OpenWeather API request fails."""
+    pass
+
+class ActivityAPIError(APIError):
+    """Raised when the TripAdvisor Activity API request fails."""
     pass
 
 class CurrencyAPIError(APIError):

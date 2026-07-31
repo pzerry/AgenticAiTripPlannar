@@ -39,6 +39,10 @@ flight:
 activity:
   base_url: "https://serpapi.com/search.json"
   timeout: 30
+
+hotel:
+  base_url: "https://serpapi.com/search.json"
+  timeout: 30
   
 travel:
 
