@@ -1,0 +1,90 @@
+app:
+  name: AI Travel Planner
+  version: 1.0.0
+  environment: development
+  debug: true
+
+llm:
+  default_provider: groq
+
+  providers:
+
+
+    groq:
+      enabled: true
+      provider: groq  
+      model: qwen/qwen3.6-27b
+      temperature: 0
+      max_tokens: 4096
+      
+
+    ollama_qwen3:
+      enabled: true
+      provider: ollama
+      base_url: "http://localhost:11434"
+      model: "qwen3:8b"
+      temperature: 0.0
+      num_ctx: 8192
+      keep_alive: "30m"
+      
+    openrouter_generator:
+      model: "openai/gpt-oss-20b:free"
+      max_tokens: 2048
+      temperature: 0.2
+      enabled: true
+
+    openrouter_analyzer:
+      model: "nvidia/nemotron-3.5-lightning:free"
+      base_url: "https://openrouter.ai/api/v1"
+      temperature: 0.1
+      max_tokens: 4098
+      reasoning:
+        effort: "low"
+      timeout: 60
+
+      max_retries: 2
+      referer: "http://localhost"
+      title: "Travel Planner Analyzer"
+
+weather:
+  base_url: "https://api.openweathermap.org/data/2.5"
+  timeout: 30
+  units: metric
+
+currency:
+  base_url: "https://v6.exchangerate-api.com/v6"
+  timeout: 20
+
+flight:
+  base_url: "https://serpapi.com/search.json"
+  timeout: 30
+
+activity:
+  base_url: "https://serpapi.com/search.json"
+  timeout: 30
+
+hotel:
+  base_url: "https://serpapi.com/search.json"
+  timeout: 30
+  gl: us
+  hl: en
+  currency: USD
+  
+travel:
+
+  currency: GBP
+
+logging:
+  level: INFO
+
+  console: true
+  file: true
+
+  directory: logs
+
+  max_bytes: 5242880
+  backup_count: 5
+
+aviation:
+  base_url: "https://aviationapi.com/v1"
+  timeout: 30
