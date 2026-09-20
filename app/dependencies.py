@@ -1,9 +1,9 @@
-from functools import lru_cache
+from fastapi import Request
 
 from app.services.travel_service import TravelService
 
 
-@lru_cache
-def get_travel_service() -> TravelService:
-    """Return the TravelService instance."""
-    return TravelService()
+def get_travel_service(request: Request) -> TravelService:
+    """Return the application-wide TravelService instance."""
+
+    return request.app.state.travel_service

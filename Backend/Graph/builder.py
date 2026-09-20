@@ -1,200 +1,72 @@
-"""LangGraph workflow definition for the AI Travel Planner."""
+"""Build the same workflow for the API and deterministic integration tests."""
 
-from typing import Literal
+from contextlib import asynccontextmanager
+from importlib import import_module
+from typing import AsyncIterator
 
-from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.graph import END, START, StateGraph
+from psycopg_pool import AsyncConnectionPool
 
-from Backend.Graph.agents.activity_agent import activity_agent
-from Backend.Graph.agents.flight_agent import flight_agent
-from Backend.Graph.agents.hotel_agent import hotel_agent
-from Backend.Graph.nodes.currencyNode import currency_node
-from Backend.Graph.nodes.orchestrator import orchestrator
-from Backend.Graph.nodes.packet_generator import package_agent
-from Backend.Graph.nodes.response_generator import response_generator
-from Backend.Graph.nodes.router import analyzer_router, fanout
+from Backend.Graph.checkpoint import checkpoint_serializer
+from Backend.Graph.nodes.conversation import clarification, record_response
+from Backend.Graph.nodes.router import analyzer_router, fanout, worker_router
 from Backend.Graph.nodes.travel_requester import travel_request_analyzer
-from Backend.Graph.nodes.weatherNode import weather_node
 from Backend.Graph.state import TravelAgentState
 
 
-# ==========================================================
-# Checkpointer
-# ==========================================================
+def build_travel_graph(*, node_overrides: dict | None = None) -> StateGraph:
+    """Overrides replace external model/tool calls, never the graph's edges."""
+    overrides = dict(node_overrides or {})
+    builder = StateGraph(TravelAgentState)
+    nodes = {
+        "travel_request_analyzer": travel_request_analyzer,
+        "clarification": clarification,
+        "record_response": record_response,
+    }
+    external_nodes = {
+        "orchestrator": ("Backend.Graph.nodes.orchestrator", "orchestrator"),
+        "flight_agent": ("Backend.Graph.agents.flight_agent", "flight_agent"),
+        "hotel_agent": ("Backend.Graph.agents.hotel_agent", "hotel_agent"),
+        "activity_agent": ("Backend.Graph.agents.activity_agent", "activity_agent"),
+        "weather_node": ("Backend.Graph.nodes.weatherNode", "weather_node"),
+        "currency_node": ("Backend.Graph.nodes.currencyNode", "currency_node"),
+        "response_generator": ("Backend.Graph.nodes.response_generator", "response_generator"),
+    }
+    if set(overrides) - (nodes.keys() | external_nodes.keys()):
+        raise ValueError("Unknown graph node override")
+    for name, (module, function) in external_nodes.items():
+        # Lazy imports let tests use this workflow without constructing real
+        # provider clients or requiring API keys.
+        nodes[name] = overrides[name] if name in overrides else getattr(import_module(module), function)
+    nodes.update(overrides)
+    for name, node in nodes.items():
+        builder.add_node(name, node, defer=name == "currency_node")
 
-checkpointer = MemorySaver()
-
-
-# ==========================================================
-# Graph
-# ==========================================================
-
-builder = StateGraph(TravelAgentState)
-
-
-# ==========================================================
-# Nodes
-# ==========================================================
-
-builder.add_node(
-    "travel_request_analyzer",
-    travel_request_analyzer,
-)
-
-builder.add_node(
-    "orchestrator",
-    orchestrator,
-)
-
-builder.add_node(
-    "flight_agent",
-    flight_agent,
-)
-
-builder.add_node(
-    "hotel_agent",
-    hotel_agent,
-)
-
-builder.add_node(
-    "activity_agent",
-    activity_agent,
-)
-
-builder.add_node(
-    "weather_node",
-    weather_node,
-)
-
-builder.add_node(
-    "currency_node",
-    currency_node,
-)
-
-builder.add_node(
-    "package_agent",
-    package_agent,
-    defer=True,
-)
-
-builder.add_node(
-    "response_generator",
-    response_generator,
-)
+    builder.add_edge(START, "travel_request_analyzer")
+    builder.add_conditional_edges("travel_request_analyzer", analyzer_router)
+    builder.add_edge("clarification", "travel_request_analyzer")
+    builder.add_conditional_edges("orchestrator", fanout)
+    for name in ("flight_agent", "hotel_agent", "activity_agent", "weather_node"):
+        builder.add_conditional_edges(name, worker_router)
+    builder.add_edge("currency_node", "response_generator")
+    builder.add_edge("response_generator", "record_response")
+    builder.add_edge("record_response", END)
+    return builder
 
 
-# ==========================================================
-# Entry
-# ==========================================================
+@asynccontextmanager
+async def create_travel_graph() -> AsyncIterator:
+    """Keep the checkpoint pool alive for the application's lifetime."""
+    from Backend.Config.env import env
 
-builder.add_edge(
-    START,
-    "travel_request_analyzer",
-)
-
-
-# ==========================================================
-# Analyzer → Orchestrator
-# ==========================================================
-
-builder.add_conditional_edges(
-    "travel_request_analyzer",
-    analyzer_router,
-)
-
-
-# ==========================================================
-# Orchestrator → Workers
-# ==========================================================
-
-builder.add_conditional_edges(
-    "orchestrator",
-    fanout,
-)
-
-
-# ==========================================================
-# Worker Router
-# ==========================================================
-
-def worker_router(
-    state: TravelAgentState,
-) -> Literal[
-    "package_agent",
-    "response_generator",
-]:
-    """
-    Route worker results.
-
-    Full plans:
-        worker → package_agent
-
-    Direct requests:
-        worker → response_generator
-    """
-
-    execution_plan = state.get(
-        "execution_plan"
-    )
-
-    if execution_plan is None:
-        raise ValueError(
-            "Execution plan is missing."
-        )
-
-    if execution_plan.intent.value == "full_plan":
-        return "package_agent"
-
-    return "response_generator"
-
-
-# ==========================================================
-# Workers → Next Step
-# ==========================================================
-
-for worker in [
-    "flight_agent",
-    "hotel_agent",
-    "activity_agent",
-    "weather_node",
-]:
-    builder.add_conditional_edges(
-        worker,
-        worker_router,
-    )
-
-
-# ==========================================================
-# Full Plan Pipeline
-#
-# Package → Currency → Response → END
-# ==========================================================
-
-builder.add_edge(
-    "package_agent",
-    "currency_node",
-)
-
-builder.add_edge(
-    "currency_node",
-    "response_generator",
-)
-
-
-# ==========================================================
-# Direct Request / Full Plan → END
-# ==========================================================
-
-builder.add_edge(
-    "response_generator",
-    END,
-)
-
-
-# ==========================================================
-# Compile
-# ==========================================================
-
-graph = builder.compile(
-    checkpointer=checkpointer,
-)
+    if not env.DATABASE_URL:
+        raise RuntimeError("DATABASE_URL is not configured.")
+    async with AsyncConnectionPool(
+        conninfo=env.DATABASE_URL, min_size=1, max_size=10,
+        kwargs={"autocommit": True},
+    ) as pool:
+        checkpointer = AsyncPostgresSaver(pool, serde=checkpoint_serializer())
+        await checkpointer.setup()
+        graph = build_travel_graph().compile(checkpointer=checkpointer)
+        yield graph, checkpointer

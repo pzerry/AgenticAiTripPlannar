@@ -1,0 +1,28 @@
+{
+  "run_at": "2026-09-11T14:16:25.119953+00:00",
+  "provider": "openrouter_minimax",
+  "model": "minimax/minimax-m3:free",
+  "live": true,
+  "dataset_sha256": "97c672e8f828c3c09b9c2d240e85228514757d542b9ad1e98a347ad55a5dcfd3",
+  "prompt_sha256": "8676c9ff9e1420a62006cc2333dcf35d7f31288d58b68a7bcf76a130a3db2c4b",
+  "langchain_core": "1.5.1",
+  "cases": [
+    {
+      "id": "durable_flight",
+      "expected": [
+        [
+          "upsert",
+          "preferred_flight_type",
+          "non_stop"
+        ]
+      ],
+      "passed": false,
+      "error_type": "NotFoundError",
+      "status_code": 404,
+      "latency_ms": 414.9
+    }
+  ],
+  "passed": 0,
+  "total": 1,
+  "release_gate_passed": false
+}

@@ -1,6 +1,10 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from Backend.Memory.chat_turns import TurnBusyError
+from Backend.Memory.events import DuplicateMessageError, OwnershipError
+from app.services.travel_service import LegacyInterruptError
+
 from Backend.Exceptions.exception import (
     ActivityAPIError,
     CurrencyAPIError,
@@ -12,6 +16,17 @@ from Backend.Exceptions.exception import (
 
 def register_exception_handlers(app: FastAPI) -> None:
     """Register global exception handlers."""
+
+    @app.exception_handler(OwnershipError)
+    async def ownership_error(request: Request, exc: OwnershipError):
+        # Do not reveal whether another user's conversation exists.
+        return JSONResponse(status_code=404, content={"detail": "Conversation not found"})
+
+    async def turn_conflict(request: Request, exc: Exception):
+        return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+    for error in (TurnBusyError, DuplicateMessageError, LegacyInterruptError):
+        app.add_exception_handler(error, turn_conflict)
 
     @app.exception_handler(FlightAPIError)
     async def flight_exception_handler(
@@ -72,4 +87,3 @@ def register_exception_handlers(app: FastAPI) -> None:
                 "detail": str(exc),
             },
         )
-    

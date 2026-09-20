@@ -1,0 +1,29 @@
+{
+  "run_at": "2026-09-11T17:40:12.464107+00:00",
+  "provider": "groq",
+  "model": "qwen/qwen3.6-27b",
+  "live": true,
+  "output_method": "json_mode",
+  "dataset_sha256": "97c672e8f828c3c09b9c2d240e85228514757d542b9ad1e98a347ad55a5dcfd3",
+  "prompt_sha256": "b6fe2717911989e1fa94fcaf12f6e92f01d4bfacfcd12d84ab3c9ecca9d8954c",
+  "langchain_core": "1.5.1",
+  "cases": [
+    {
+      "id": "durable_flight",
+      "expected": [
+        [
+          "upsert",
+          "preferred_flight_type",
+          "non_stop"
+        ]
+      ],
+      "passed": false,
+      "error_type": "RateLimitError",
+      "status_code": 429,
+      "latency_ms": 184.6
+    }
+  ],
+  "passed": 0,
+  "total": 1,
+  "release_gate_passed": false
+}

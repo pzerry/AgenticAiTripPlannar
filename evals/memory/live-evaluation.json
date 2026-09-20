@@ -1,0 +1,185 @@
+{
+  "run_at": "2026-09-14T11:37:57.180854+00:00",
+  "provider": "openrouter_minimax",
+  "model": "google/gemma-4-26b-a4b-it:free",
+  "live": true,
+  "output_method": "json_mode",
+  "dataset_sha256": "97c672e8f828c3c09b9c2d240e85228514757d542b9ad1e98a347ad55a5dcfd3",
+  "prompt_sha256": "56f4b6b1562549b73984ae6b67cd780f1e6dc47fa5c493e0bde978373b9e6029",
+  "langchain_core": "1.5.1",
+  "cases": [
+    {
+      "id": "durable_flight",
+      "expected": [
+        [
+          "upsert",
+          "preferred_flight_type",
+          "non_stop"
+        ]
+      ],
+      "passed": false,
+      "error_type": "RateLimitError",
+      "status_code": 429,
+      "latency_ms": 2757.8
+    },
+    {
+      "id": "trip_exception",
+      "expected": [],
+      "actual": [],
+      "passed": true,
+      "usage": {
+        "input_tokens": 1545,
+        "output_tokens": 174,
+        "total_tokens": 1719
+      },
+      "latency_ms": 5727.6
+    },
+    {
+      "id": "correction",
+      "expected": [
+        [
+          "upsert",
+          "preferred_flight_type",
+          "connecting_allowed"
+        ]
+      ],
+      "passed": false,
+      "error_type": "RateLimitError",
+      "status_code": 429,
+      "latency_ms": 2766.8
+    },
+    {
+      "id": "other_person",
+      "expected": [],
+      "passed": false,
+      "error_type": "RateLimitError",
+      "status_code": 429,
+      "latency_ms": 2767.1
+    },
+    {
+      "id": "forget",
+      "expected": [
+        [
+          "delete",
+          "preferred_hotel_class",
+          null
+        ]
+      ],
+      "passed": false,
+      "error_type": "RateLimitError",
+      "status_code": 429,
+      "latency_ms": 2752.8
+    },
+    {
+      "id": "hotel",
+      "expected": [
+        [
+          "upsert",
+          "preferred_hotel_class",
+          "4_star"
+        ]
+      ],
+      "passed": false,
+      "error_type": "RateLimitError",
+      "status_code": 429,
+      "latency_ms": 2569.0
+    },
+    {
+      "id": "budget_style",
+      "expected": [
+        [
+          "upsert",
+          "preferred_trip_style",
+          "budget_friendly"
+        ]
+      ],
+      "passed": false,
+      "error_type": "RateLimitError",
+      "status_code": 429,
+      "latency_ms": 2570.9
+    },
+    {
+      "id": "temporary_hotel",
+      "expected": [],
+      "passed": false,
+      "error_type": "RateLimitError",
+      "status_code": 429,
+      "latency_ms": 2600.7
+    },
+    {
+      "id": "quoted_translation",
+      "expected": [],
+      "passed": false,
+      "error_type": "RateLimitError",
+      "status_code": 429,
+      "latency_ms": 1412.9
+    },
+    {
+      "id": "provider_injection",
+      "expected": [],
+      "passed": false,
+      "error_type": "RateLimitError",
+      "status_code": 429,
+      "latency_ms": 1584.6
+    },
+    {
+      "id": "trip_budget",
+      "expected": [],
+      "passed": false,
+      "error_type": "RateLimitError",
+      "status_code": 429,
+      "latency_ms": 1485.8
+    },
+    {
+      "id": "direct_not_nonstop",
+      "expected": [],
+      "passed": false,
+      "error_type": "RateLimitError",
+      "status_code": 429,
+      "latency_ms": 1517.6
+    },
+    {
+      "id": "forget_all",
+      "expected": [
+        [
+          "delete",
+          "preferred_flight_type",
+          null
+        ],
+        [
+          "delete",
+          "preferred_hotel_class",
+          null
+        ],
+        [
+          "delete",
+          "preferred_trip_style",
+          null
+        ]
+      ],
+      "passed": false,
+      "error_type": "RateLimitError",
+      "status_code": 429,
+      "latency_ms": 1519.2
+    },
+    {
+      "id": "hypothetical",
+      "expected": [],
+      "passed": false,
+      "error_type": "RateLimitError",
+      "status_code": 429,
+      "latency_ms": 1772.7
+    },
+    {
+      "id": "unrelated",
+      "expected": [],
+      "passed": false,
+      "error_type": "RateLimitError",
+      "status_code": 429,
+      "latency_ms": 1278.9
+    }
+  ],
+  "passed": 1,
+  "total": 15,
+  "release_gate_passed": false
+}

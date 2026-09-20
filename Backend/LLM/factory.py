@@ -33,7 +33,8 @@ def get_llm(provider: str | None = None):
             num_ctx=cfg.get("num_ctx", 8192),
             keep_alive=cfg.get("keep_alive", "30m"),
         )
-    
+
+
 
     elif provider == "groq":
             cfg = providers["groq"]
@@ -48,8 +49,8 @@ def get_llm(provider: str | None = None):
             )
 
 
-    elif provider == "openrouter_analyzer":
-        cfg = providers["openrouter_analyzer"]
+    elif provider in ("openrouter_analyzer", "openrouter_minimax"):
+        cfg = providers[provider]
 
         return ChatOpenAI(
             model=cfg["model"],
@@ -90,40 +91,6 @@ def get_llm(provider: str | None = None):
                 "X-Title": cfg.get(
                     "title",
                     "Travel Planner Analyzer",
-                ),
-            },
-        )
-
-
-   
-    elif provider == "openrouter_generator":
-        cfg = providers["openrouter_generator"]
-
-        return ChatOpenAI(
-            model=cfg["model"],
-            api_key=env.OPENROUTERN_API_KEY,
-            base_url=cfg.get(
-                "base_url",
-                "https://openrouter.ai/api/v1",
-            ),
-            temperature=cfg.get("temperature", 0.1),
-            max_tokens=cfg.get("max_tokens", 2048),
-            extra_body={
-                "reasoning": {
-                    "effort": cfg.get(
-                        "reasoning_effort",
-                        "low",
-                    )
-                }
-            },
-            default_headers={
-                "HTTP-Referer": cfg.get(
-                    "referer",
-                    "http://localhost",
-                ),
-                "X-Title": cfg.get(
-                    "title",
-                    "Travel Planner",
                 ),
             },
         )

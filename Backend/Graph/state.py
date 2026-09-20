@@ -2,22 +2,24 @@ from typing import Annotated, TypedDict
 
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
-
+from uuid import UUID
 from Backend.Schemas.activity_schema import RecommendedActivity
-from Backend.Schemas.currency_schema import CurrencyConversion
+from Backend.Schemas.currency_schema import CurrencyConversion,CurrencyRequest
 from Backend.Schemas.flight_schema import RecommendedFlight
 from Backend.Schemas.hotel_schema import RecommendedHotel
 from Backend.Schemas.orchestrator_schema import ExecutionPlan
-from Backend.Schemas.travel_schema import TravelPackage, TravelPlan
+from Backend.Schemas.travel_schema import TravelPlan
 from Backend.Schemas.weather_schema import WeatherResponse
 
 
 class TravelAgentState(TypedDict):
     """Shared state passed between LangGraph nodes."""
 
+    user_id: UUID
+
     # =========================
     # Conversation
-    # =========================
+    # ========================
     messages: Annotated[
         list[BaseMessage],
         add_messages,
@@ -34,7 +36,12 @@ class TravelAgentState(TypedDict):
     # =========================
     # Memory
     # =========================
-    memory_context: dict | None
+    memory_context: dict[str, str] | None
+    memory_applied_defaults: dict[str, str]
+    memory_selected_ids: list[str]
+    current_message_id: str
+    response_message_id: str
+    last_response: str
 
     # =========================
     # Orchestration
@@ -53,11 +60,7 @@ class TravelAgentState(TypedDict):
     # =========================
     weather: WeatherResponse | None
     currency: CurrencyConversion | None
-
-    # =========================
-    # Package Generation
-    # =========================
-    travel_packages: list[TravelPackage] | None
+    currency_request: CurrencyRequest | None
 
     # =========================
     # Final Response

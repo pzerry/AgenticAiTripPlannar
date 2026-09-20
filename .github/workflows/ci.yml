@@ -1,0 +1,121 @@
+name: CI and container build
+
+# Pull requests validate changes before merge. Main builds also produce an
+# image artifact that is promoted to AWS after the container checks pass.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  tests:
+    name: Tests (Python 3.14 + PostgreSQL 18)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci-test-only
+          POSTGRES_DB: trip_planner_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d trip_planner_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      # Synthetic credentials only. Tests mock all external model/API calls.
+      PYTHON_DOTENV_DISABLED: "1"
+      MEMORY_TEST_DATABASE_URL: postgresql://ci:ci-test-only@localhost:5432/trip_planner_test
+      DATABASE_URL: postgresql://ci:ci-test-only@localhost:5432/trip_planner_test
+      GROQ_API_KEY: ci-placeholder
+      OPENROUTERNIT_API_KEY: ci-placeholder
+      OPENROUTER_API_KEY: ci-placeholder
+      OPENROUTERN_API_KEY: ci-placeholder
+      SERP_API_KEY: ci-placeholder
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Reject tracked runtime secrets and logs
+        run: python3 scripts/check_repository_files.py
+      - uses: astral-sh/setup-uv@v10
+        with:
+          version: "0.11.26"
+          python-version: "3.14"
+          enable-cache: true
+      - name: Install PostgreSQL client library
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libpq5
+      - name: Install locked dependencies
+        run: uv sync --locked --no-dev
+      - name: Check Python syntax
+        run: uv run --no-sync python -m compileall -q Backend FrontEnd app scripts tests main.py
+      - name: Run all tests (database tests may not be skipped)
+        run: uv run --no-sync python scripts/ci_tests.py
+
+  infrastructure:
+    name: Validate AWS infrastructure
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.14.3"
+      - run: terraform -chdir=infra/aws fmt -check
+      - run: terraform -chdir=infra/aws init -backend=false -input=false -lockfile=readonly
+      - run: terraform -chdir=infra/aws validate
+
+  container:
+    name: Build application container
+    needs: [tests, infrastructure]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Build the tested revision
+        run: >-
+          docker build
+          --label "org.opencontainers.image.source=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
+          --label "org.opencontainers.image.revision=${GITHUB_SHA}"
+          --tag "trip-planner:${GITHUB_SHA}" .
+      - name: Smoke-check packaged imports and runtime user
+        run: |
+          docker run --rm --entrypoint python "trip-planner:${GITHUB_SHA}" -c \
+            "import os, pathlib, psycopg, streamlit; from app.main import app; from Backend.Memory.worker import MemoryWorker; assert os.getuid() != 0; assert not pathlib.Path('/app/.env').exists(); print('Container imports OK')"
+      - name: Export container image
+        if: github.event_name != 'pull_request'
+        run: docker save "trip-planner:${GITHUB_SHA}" | gzip > "${RUNNER_TEMP}/trip-planner-image.tar.gz"
+      - name: Upload image for manual delivery
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: trip-planner-image-${{ github.sha }}
+          path: ${{ runner.temp }}/trip-planner-image.tar.gz
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 3
+
+  deploy:
+    name: Deploy to AWS
+    needs: container
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.AWS_DEPLOY_ENABLED == 'true'
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/aws-deploy.yml

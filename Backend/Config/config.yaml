@@ -13,9 +13,9 @@ llm:
     groq:
       enabled: true
       provider: groq  
-      model: qwen/qwen3.6-27b
+      model: qwen/qwen3.8-27b
       temperature: 0
-      max_tokens: 4096
+     
       
 
     ollama_qwen3:
@@ -24,12 +24,10 @@ llm:
       base_url: "http://localhost:11434"
       model: "qwen3:8b"
       temperature: 0.0
-      num_ctx: 8192
       keep_alive: "30m"
       
     openrouter_generator:
       model: "openai/gpt-oss-20b:free"
-      max_tokens: 2048
       temperature: 0.2
       enabled: true
 
@@ -37,7 +35,6 @@ llm:
       model: "nvidia/nemotron-3.5-lightning:free"
       base_url: "https://openrouter.ai/api/v1"
       temperature: 0.1
-      max_tokens: 4098
       reasoning:
         effort: "low"
       timeout: 60
@@ -45,6 +42,24 @@ llm:
       max_retries: 2
       referer: "http://localhost"
       title: "Travel Planner Analyzer"
+
+    openrouter_minimax:
+      enabled: true
+      provider: openrouter
+      model: "minimax/minimax-m3:free"
+      base_url: "https://openrouter.ai/api/v1"
+      temperature: 0.0
+
+      reasoning:
+        effort: "low"
+
+      max_tokens: 8192
+      timeout: 120
+      max_retries: 2
+
+      referer: "http://localhost"
+      title: "Travel Planner Analyzer"
+
 
 weather:
   base_url: "https://api.openweathermap.org/data/2.5"
@@ -88,3 +103,8 @@ logging:
 aviation:
   base_url: "https://aviationapi.com/v1"
   timeout: 30
+
+postgresql:
+  min_size: 1
+  max_size: 10
+  command_timeout: 30

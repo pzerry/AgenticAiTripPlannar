@@ -21,7 +21,7 @@ from Backend.tools.hotel_tool import search_hotels
 logger = get_logger(__name__)
 
 
-llm = get_llm("ollama_qwen3")
+llm = get_llm("groq")
 
 structured_llm = llm.with_structured_output(
     HotelSelection

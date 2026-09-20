@@ -1,137 +1,52 @@
-"""Orchestrator node."""
+"""Choose the travel workers using a validated model response."""
 
-import json
+from functools import lru_cache
 
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.exceptions import OutputParserException
 from langchain_core.runnables import RunnableConfig
 
 from Backend.Exceptions.exception import GraphStateError
 from Backend.Graph.state import TravelAgentState
-from Backend.LLM.factory import get_llm
 from Backend.Logger.decorators import log_agent
 from Backend.Logger.logger import get_logger
 from Backend.Prompts.orchestrator_prompt import orchestrator_prompt
 from Backend.Schemas.orchestrator_schema import ExecutionPlan
 
-
 logger = get_logger(__name__)
 
 
-llm = get_llm("openrouter_analyzer")
+@lru_cache(maxsize=1)
+def get_orchestrator_chain():
+    from Backend.LLM.factory import get_llm
+
+    # Ask the provider for JSON instead of ordinary chat text. LangChain's
+    # Pydantic parser also handles a JSON Markdown fence if one is returned,
+    # and validates intent/workers before the graph dispatches any travel APIs.
+    return orchestrator_prompt | get_llm("groq").with_structured_output(
+        ExecutionPlan, method="json_mode"
+    )
 
 
 @log_agent("Orchestrator")
-async def orchestrator(
-    state: TravelAgentState,
-    config: RunnableConfig,
-) -> dict:
-    """
-    Create the execution plan for the travel workflow.
-
-    Responsibilities:
-    - understand the user's requested outcome
-    - determine the travel intent
-    - determine the required workers
-    - create the ExecutionPlan
-
-    Does not:
-    - call travel APIs
-    - modify TravelPlan
-    - generate recommendations
-    - execute workers
-    - ask clarification questions
-    """
+async def orchestrator(state: TravelAgentState, config: RunnableConfig) -> dict:
+    """Create an ExecutionPlan without changing the trip or executing workers."""
+    travel_plan = state.get("travel_plan")
+    if travel_plan is None:
+        raise GraphStateError("Orchestrator requires a TravelPlan.")
 
     try:
-        travel_plan = state.get("travel_plan")
-
-        if travel_plan is None:
-            raise GraphStateError(
-                "Orchestrator requires a TravelPlan."
-            )
-
-        messages = state.get(
-            "messages",
-            [],
-        )
-
-        response = await (
-            orchestrator_prompt
-            | llm
-        ).ainvoke(
+        result = await get_orchestrator_chain().ainvoke(
             {
-                "travel_plan": travel_plan.model_dump(
-                    mode="json"
-                ),
-                "messages": messages,
+                "travel_plan": travel_plan.model_dump(mode="json"),
+                "messages": state.get("messages", []),
             },
             config=config,
         )
+    except OutputParserException:
+        # Do not copy raw model text into errors or routine logs. Invalid JSON,
+        # unknown intent/worker values, and empty worker lists must fail closed.
+        raise GraphStateError("Orchestrator returned an invalid execution plan.") from None
 
-        raw_content = response.content
-
-        if not raw_content:
-            raise GraphStateError(
-                "Orchestrator returned empty response."
-            )
-
-        logger.info(
-            "Raw orchestrator response: %s",
-            raw_content,
-        )
-
-        # ---------------------------------------------
-        # Parse JSON
-        # ---------------------------------------------
-
-        try:
-            data = json.loads(raw_content)
-
-        except json.JSONDecodeError as exc:
-            raise GraphStateError(
-                "Orchestrator returned invalid JSON: "
-                f"{raw_content}"
-            ) from exc
-
-        # ---------------------------------------------
-        # Validate with Pydantic
-        # ---------------------------------------------
-
-        try:
-            result = ExecutionPlan.model_validate(
-                data
-            )
-
-        except Exception as exc:
-            raise GraphStateError(
-                "Orchestrator returned invalid execution plan: "
-                f"{data}"
-            ) from exc
-
-        if not result.workers:
-            raise GraphStateError(
-                "Orchestrator returned no workers."
-            )
-
-        logger.info(
-            "Orchestrator intent: %s",
-            result.intent,
-        )
-
-        logger.info(
-            "Orchestrator workers: %s",
-            [
-                worker.value
-                for worker in result.workers
-            ],
-        )
-
-        return {
-            "execution_plan": result,
-        }
-
-    except Exception:
-        logger.exception(
-            "Orchestrator failed."
-        )
-        raise
+    logger.info("Orchestrator intent: %s", result.intent.value)
+    logger.info("Orchestrator workers: %s", [worker.value for worker in result.workers])
+    return {"execution_plan": result}
