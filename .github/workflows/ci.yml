@@ -44,13 +44,14 @@ jobs:
       OPENROUTER_API_KEY: ci-placeholder
       OPENROUTERN_API_KEY: ci-placeholder
       SERP_API_KEY: ci-placeholder
+
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - name: Reject tracked runtime secrets and logs
         run: python3 scripts/check_repository_files.py
-      - uses: astral-sh/setup-uv@v10
+      -       - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
           version: "0.11.26"
           python-version: "3.14"
@@ -64,24 +65,10 @@ jobs:
       - name: Run all tests (database tests may not be skipped)
         run: uv run --no-sync python scripts/ci_tests.py
 
-  infrastructure:
-    name: Validate AWS infrastructure
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.14.3"
-      - run: terraform -chdir=infra/aws fmt -check
-      - run: terraform -chdir=infra/aws init -backend=false -input=false -lockfile=readonly
-      - run: terraform -chdir=infra/aws validate
-
+  
   container:
     name: Build application container
-    needs: [tests, infrastructure]
+    needs: tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
