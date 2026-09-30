@@ -1,23 +1,9 @@
-import asyncio
+"""Start the local API; chat must pass through authentication and memory capture."""
 
-from langchain_core.messages import HumanMessage
-
-from Backend.Graph.builder import graph
-
-
-async def main():
-    state = {
-        "messages": [
-            HumanMessage(
-                content="Plan a 5 day trip to Tokyo under ₹2 lakh."
-            )
-        ]
-    }
-
-    result = await graph.ainvoke(state)
-
-    print(result)
+import uvicorn
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    # Calling the graph directly would bypass ownership and memory capture.
+    # Use POST /travel/chat to run an authenticated conversation.
+    uvicorn.run("app.main:app", host="127.0.0.1", port=8000)

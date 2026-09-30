@@ -8,3 +8,22 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Runtime configuration and user data must stay outside version control.
+.env
+.env.*
+!.env.example
+!.env.sample
+logs/
+*.pem
+*.key
+.DS_Store
+
+# Terraform local state, plans, and environment inputs
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+*.tfvars.json
+crash.log

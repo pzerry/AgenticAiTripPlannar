@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field
 
+from Backend.Schemas.currency_schema import CurrencyRequest
+
 
 class TravelPlanUpdates(BaseModel):
     """Only values newly learned or changed in the current turn."""
@@ -27,14 +29,22 @@ class TravelPlanUpdates(BaseModel):
     total_budget: float | None = None
     budget_currency: str | None = None
 
+    # =========================
+    # User Preferences
+    # =========================
+
+    preferred_flight_type: str | None = None
+    preferred_hotel_class: str | None = None
+    preferred_trip_style: str | None = None
+
 
 class TravelRequestAnalyzerOutput(BaseModel):
     """Structured output of the Travel Request Analyzer."""
 
     updates: TravelPlanUpdates = Field(
         description=(
-            "Only travel fields newly learned or changed "
-            "in the current turn."
+            "Only travel fields or user preferences newly learned "
+            "or changed in the current turn."
         )
     )
 
@@ -47,5 +57,13 @@ class TravelRequestAnalyzerOutput(BaseModel):
         description=(
             "Zero, one, or multiple clarification questions. "
             "Return an empty list when no clarification is required."
+        ),
+    )
+
+    currency_request: CurrencyRequest | None = Field(
+        default=None,
+        description=(
+            "Currency conversion request when the user explicitly "
+            "requests a currency conversion."
         ),
     )

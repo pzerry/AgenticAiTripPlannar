@@ -1,0 +1,14 @@
+region                     = "us-east-1"
+name                       = "trip-planner-staging"
+github_oidc_provider_arn    = "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
+vpc_id                     = "vpc-REPLACE"
+public_subnet_ids          = ["subnet-public-a", "subnet-public-b"]
+private_subnet_ids         = ["subnet-private-a", "subnet-private-b"]
+database_security_group_id = "sg-database"
+certificate_arn            = "arn:aws:acm:us-east-1:123456789012:certificate/REPLACE"
+api_hostname               = "api.example.com"
+ui_hostname                = "travel.example.com"
+runtime_secret_arn         = "arn:aws:secretsmanager:us-east-1:123456789012:secret:trip-planner-REPLACE"
+oidc_issuer                = "https://identity.example.com/"
+oidc_audience              = "trip-planner"
+oidc_jwks_url              = "https://identity.example.com/.well-known/jwks.json"

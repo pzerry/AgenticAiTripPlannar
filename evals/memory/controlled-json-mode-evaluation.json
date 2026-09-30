@@ -1,0 +1,84 @@
+{
+  "run_at": "2026-09-11T17:35:54.625815+00:00",
+  "provider": "openrouter_analyzer",
+  "model": "nvidia/nemotron-3.5-lightning:free",
+  "live": true,
+  "output_method": "json_mode",
+  "dataset_sha256": "97c672e8f828c3c09b9c2d240e85228514757d542b9ad1e98a347ad55a5dcfd3",
+  "prompt_sha256": "b6fe2717911989e1fa94fcaf12f6e92f01d4bfacfcd12d84ab3c9ecca9d8954c",
+  "langchain_core": "1.5.1",
+  "cases": [
+    {
+      "id": "durable_flight",
+      "expected": [
+        [
+          "upsert",
+          "preferred_flight_type",
+          "non_stop"
+        ]
+      ],
+      "passed": false,
+      "error_type": "TimeoutError",
+      "status_code": null,
+      "latency_ms": 50003.7
+    },
+    {
+      "id": "trip_exception",
+      "expected": [],
+      "passed": false,
+      "error_type": "TimeoutError",
+      "status_code": null,
+      "latency_ms": 50004.5
+    },
+    {
+      "id": "correction",
+      "expected": [
+        [
+          "upsert",
+          "preferred_flight_type",
+          "connecting_allowed"
+        ]
+      ],
+      "passed": false,
+      "error_type": "TimeoutError",
+      "status_code": null,
+      "latency_ms": 50002.9
+    },
+    {
+      "id": "other_person",
+      "expected": [],
+      "passed": false,
+      "error_type": "TimeoutError",
+      "status_code": null,
+      "latency_ms": 50009.3
+    },
+    {
+      "id": "forget",
+      "expected": [
+        [
+          "delete",
+          "preferred_hotel_class",
+          null
+        ]
+      ],
+      "passed": false,
+      "error_type": "TimeoutError",
+      "status_code": null,
+      "latency_ms": 50005.1
+    },
+    {
+      "id": "hotel",
+      "expected": [
+        [
+          "upsert",
+          "preferred_hotel_class",
+          "4_star"
+        ]
+      ],
+      "passed": false,
+      "error_type": "TimeoutError",
+      "status_code": null,
+      "latency_ms": 50002.7
+    }
+  ]
+}

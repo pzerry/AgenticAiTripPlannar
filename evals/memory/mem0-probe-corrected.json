@@ -1,0 +1,265 @@
+{
+  "mem0_version": "2.0.20",
+  "model": "nvidia/nemotron-3.5-lightning:free",
+  "embedding_model": "openai/text-embedding-3-small",
+  "live": true,
+  "steps": [
+    {
+      "name": "durable",
+      "result": {
+        "results": [
+          {
+            "id": "9d94f4c6-a015-4389-89df-e74329a7bb62",
+            "memory": "User always prefers nonstop flights when traveling",
+            "event": "ADD"
+          }
+        ]
+      },
+      "latency_ms": 17465.4
+    },
+    {
+      "name": "trip_exception",
+      "result": {
+        "results": []
+      },
+      "latency_ms": 45938.3
+    },
+    {
+      "name": "correction",
+      "result": {
+        "results": [
+          {
+            "id": "1b35c804-af29-47b2-a4a4-57e2b0b7a237",
+            "memory": "User's travel preference updated: connections are generally acceptable from 2026-09-11 onward, shifting from previous nonstop flight preference",
+            "event": "ADD"
+          }
+        ]
+      },
+      "latency_ms": 234163.8
+    },
+    {
+      "name": "other_person",
+      "result": {
+        "results": []
+      },
+      "latency_ms": 15171.9
+    },
+    {
+      "name": "forget",
+      "result": {
+        "results": []
+      },
+      "latency_ms": 113714.2
+    },
+    {
+      "name": "after_forget",
+      "result": {
+        "results": [
+          {
+            "id": "1b35c804-af29-47b2-a4a4-57e2b0b7a237",
+            "memory": "User's travel preference updated: connections are generally acceptable from 2026-09-11 onward, shifting from previous nonstop flight preference",
+            "hash": "200b1c5755114be00161e8847ab956fc",
+            "metadata": null,
+            "created_at": "2026-09-11T17:23:51.149505+00:00",
+            "updated_at": "2026-09-11T17:23:51.149505+00:00",
+            "user_id": "synthetic-user-a",
+            "attributed_to": "user"
+          },
+          {
+            "id": "9d94f4c6-a015-4389-89df-e74329a7bb62",
+            "memory": "User always prefers nonstop flights when traveling",
+            "hash": "317d009a7b16e27f9e88dbd8878fe3ff",
+            "metadata": null,
+            "created_at": "2026-09-11T17:19:11.047302+00:00",
+            "updated_at": "2026-09-11T17:19:11.047302+00:00",
+            "user_id": "synthetic-user-a",
+            "attributed_to": "user"
+          }
+        ]
+      },
+      "latency_ms": 0.5
+    },
+    {
+      "name": "isolation",
+      "result": {
+        "results": []
+      },
+      "latency_ms": 1176.9
+    },
+    {
+      "name": "explicit_delete_all",
+      "result": {
+        "message": "Memories deleted successfully!"
+      },
+      "latency_ms": 2.1
+    },
+    {
+      "name": "after_explicit_delete",
+      "result": {
+        "results": []
+      },
+      "latency_ms": 0.1
+    }
+  ],
+  "usage": [
+    {
+      "tokens": {
+        "completion_tokens": 463,
+        "prompt_tokens": 8258,
+        "total_tokens": 8721,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 485,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0
+        }
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "tokens": {
+        "completion_tokens": 1616,
+        "prompt_tokens": 8287,
+        "total_tokens": 9903,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 1953,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0
+        }
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "tokens": {
+        "completion_tokens": 7399,
+        "prompt_tokens": 8297,
+        "total_tokens": 15696,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 8017,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0
+        }
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "tokens": {
+        "completion_tokens": 645,
+        "prompt_tokens": 8348,
+        "total_tokens": 8993,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 772,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0
+        }
+      },
+      "finish_reason": "stop"
+    },
+    {
+      "tokens": {
+        "completion_tokens": 3943,
+        "prompt_tokens": 8355,
+        "total_tokens": 12298,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 4613,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0
+        }
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "limitations": [
+    "Small synthetic probe, not a statistical quality benchmark.",
+    "Token counts below cover LLM responses, not embedding usage; monetary cost is not measured."
+  ]
+}

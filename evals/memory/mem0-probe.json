@@ -1,0 +1,225 @@
+{
+  "mem0_version": "2.0.20",
+  "model": "nvidia/nemotron-3.5-lightning:free",
+  "embedding_model": "openai/text-embedding-3-small",
+  "live": true,
+  "steps": [
+    {
+      "name": "durable",
+      "result": {
+        "results": []
+      },
+      "latency_ms": 54027.5
+    },
+    {
+      "name": "trip_exception",
+      "result": {
+        "results": []
+      },
+      "latency_ms": 22820.3
+    },
+    {
+      "name": "correction",
+      "result": {
+        "results": []
+      },
+      "latency_ms": 45603.2
+    },
+    {
+      "name": "other_person",
+      "result": {
+        "results": [
+          {
+            "id": "0381c593-f866-4a96-ab9d-98c0c6466ecd",
+            "memory": "User always prefers nonstop flights for travel",
+            "event": "ADD"
+          },
+          {
+            "id": "10084c12-ca29-45c6-9591-a9ca99038c7c",
+            "memory": "User, from now on, generally accepts connections for flights",
+            "event": "ADD"
+          }
+        ]
+      },
+      "latency_ms": 28384.8
+    },
+    {
+      "name": "forget",
+      "result": {
+        "results": []
+      },
+      "latency_ms": 40941.0
+    },
+    {
+      "name": "after_forget",
+      "error_type": "ValueError",
+      "status_code": null,
+      "latency_ms": 0.1
+    },
+    {
+      "name": "isolation",
+      "error_type": "ValueError",
+      "status_code": null,
+      "latency_ms": 0.1
+    },
+    {
+      "name": "explicit_delete_all",
+      "result": {
+        "message": "Memories deleted successfully!"
+      },
+      "latency_ms": 5.2
+    },
+    {
+      "name": "after_explicit_delete",
+      "error_type": "ValueError",
+      "status_code": null,
+      "latency_ms": 0.0
+    }
+  ],
+  "usage": [
+    {
+      "completion_tokens": 1536,
+      "prompt_tokens": 8258,
+      "total_tokens": 9794,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": 0,
+        "reasoning_tokens": 1630,
+        "rejected_prediction_tokens": null,
+        "text_tokens": null,
+        "image_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": null,
+        "text_tokens": null,
+        "video_tokens": 0
+      },
+      "cost": 0,
+      "is_byok": false,
+      "cost_details": {
+        "upstream_inference_cost": 0,
+        "upstream_inference_prompt_cost": 0,
+        "upstream_inference_completions_cost": 0
+      }
+    },
+    {
+      "completion_tokens": 1138,
+      "prompt_tokens": 8268,
+      "total_tokens": 9406,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": 0,
+        "reasoning_tokens": 1373,
+        "rejected_prediction_tokens": null,
+        "text_tokens": null,
+        "image_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": null,
+        "text_tokens": null,
+        "video_tokens": 0
+      },
+      "cost": 0,
+      "is_byok": false,
+      "cost_details": {
+        "upstream_inference_cost": 0,
+        "upstream_inference_prompt_cost": 0,
+        "upstream_inference_completions_cost": 0
+      }
+    },
+    {
+      "completion_tokens": 1536,
+      "prompt_tokens": 8278,
+      "total_tokens": 9814,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": 0,
+        "reasoning_tokens": 1822,
+        "rejected_prediction_tokens": null,
+        "text_tokens": null,
+        "image_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": null,
+        "text_tokens": null,
+        "video_tokens": 0
+      },
+      "cost": 0,
+      "is_byok": false,
+      "cost_details": {
+        "upstream_inference_cost": 0,
+        "upstream_inference_prompt_cost": 0,
+        "upstream_inference_completions_cost": 0
+      }
+    },
+    {
+      "completion_tokens": 1262,
+      "prompt_tokens": 8287,
+      "total_tokens": 9549,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": 0,
+        "reasoning_tokens": 1393,
+        "rejected_prediction_tokens": null,
+        "text_tokens": null,
+        "image_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 0,
+        "image_tokens": null,
+        "text_tokens": null,
+        "video_tokens": 0
+      },
+      "cost": 0,
+      "is_byok": false,
+      "cost_details": {
+        "upstream_inference_cost": 0,
+        "upstream_inference_prompt_cost": 0,
+        "upstream_inference_completions_cost": 0
+      }
+    },
+    {
+      "completion_tokens": 1536,
+      "prompt_tokens": 8335,
+      "total_tokens": 9871,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": null,
+        "audio_tokens": 0,
+        "reasoning_tokens": 1965,
+        "rejected_prediction_tokens": null,
+        "text_tokens": null,
+        "image_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": 0,
+        "cache_write_tokens": 0,
+        "cached_tokens": 6528,
+        "image_tokens": null,
+        "text_tokens": null,
+        "video_tokens": 0
+      },
+      "cost": 0,
+      "is_byok": false,
+      "cost_details": {
+        "upstream_inference_cost": 0,
+        "upstream_inference_prompt_cost": 0,
+        "upstream_inference_completions_cost": 0
+      }
+    }
+  ],
+  "limitations": [
+    "Small synthetic probe, not a statistical quality benchmark.",
+    "Token counts below cover LLM responses, not embedding usage; monetary cost is not measured."
+  ]
+}

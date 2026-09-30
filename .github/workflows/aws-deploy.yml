@@ -1,0 +1,72 @@
+name: AWS delivery
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: aws-staging-deployment
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Migrate and deploy ECS services
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: aws-staging
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+      ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
+      ECS_API_SERVICE: ${{ vars.ECS_API_SERVICE }}
+      ECS_WORKER_SERVICE: ${{ vars.ECS_WORKER_SERVICE }}
+      ECS_UI_SERVICE: ${{ vars.ECS_UI_SERVICE }}
+      API_HEALTH_URL: ${{ vars.API_HEALTH_URL }}
+      UI_HEALTH_URL: ${{ vars.UI_HEALTH_URL }}
+      AWS_PAGER: ""
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Validate deployment configuration
+        env:
+          AWS_DEPLOY_ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+        run: |
+          for key in AWS_REGION AWS_DEPLOY_ROLE_ARN ECR_REPOSITORY ECS_CLUSTER ECS_API_SERVICE ECS_WORKER_SERVICE ECS_UI_SERVICE API_HEALTH_URL UI_HEALTH_URL; do
+            if [ -z "${!key}" ]; then echo "Missing GitHub environment variable: $key"; exit 1; fi
+          done
+      - uses: actions/download-artifact@v8
+        with:
+          name: trip-planner-image-${{ github.sha }}
+          path: ${{ runner.temp }}/image
+      - name: Assume AWS deployment role with OIDC
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: github-${{ github.run_id }}
+          role-duration-seconds: 3600
+      - name: Publish tested image to ECR
+        shell: bash
+        run: |
+          registry="${ECR_REPOSITORY%%/*}"
+          repository="${ECR_REPOSITORY#*/}"
+          tag="sha-${GITHUB_SHA}"
+          aws ecr get-login-password | docker login --username AWS --password-stdin "$registry"
+          # Immutable tags let a failed rollout retry the same previously tested image.
+          if ! aws ecr describe-images --repository-name "$repository" --image-ids "imageTag=$tag" >/dev/null 2>&1; then
+            docker load --input "${RUNNER_TEMP}/image/trip-planner-image.tar.gz"
+            docker tag "trip-planner:${GITHUB_SHA}" "${ECR_REPOSITORY}:${tag}"
+            docker push "${ECR_REPOSITORY}:${tag}"
+          fi
+          digest="$(aws ecr describe-images --repository-name "$repository" --image-ids "imageTag=$tag" --query 'imageDetails[0].imageDigest' --output text)"
+          echo "DEPLOY_IMAGE=${ECR_REPOSITORY}@${digest}" >> "$GITHUB_ENV"
+      - name: Run migrations, roll out services, and check HTTPS endpoints
+        run: python3 scripts/deploy_ecs.py
+      - name: Record deployed revision
+        run: echo "Deployed \`$DEPLOY_IMAGE\` to \`$ECS_CLUSTER\`." >> "$GITHUB_STEP_SUMMARY"
+      - name: Remove registry credentials
+        if: always()
+        run: docker logout "${ECR_REPOSITORY%%/*}"

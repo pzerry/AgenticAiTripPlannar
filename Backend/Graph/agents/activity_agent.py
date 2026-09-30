@@ -22,10 +22,13 @@ from Backend.tools.activity_tool import search_activities
 logger = get_logger(__name__)
 
 
+# Activity selection only chooses indexes and reasons from retrieved options.
+# Use the configured Groq model to avoid the local Ollama selection bottleneck.
 llm = get_llm("ollama_qwen3")
 
 structured_llm = llm.with_structured_output(
-    ActivitySelection
+    # Tool calling supplies the selection schema and parses a typed result.
+    ActivitySelection, method="function_calling"
 )
 
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import httpx
+from math import isfinite
 from pydantic import ValidationError
 
 from Backend.Config import config
@@ -28,13 +29,29 @@ class ActivityClient:
             raise ConfigurationError("SERP_API_KEY environment variable is not set.")
 
     async def search_places(self, query: str, location: str | None = None) -> list[PlaceSummary]:
-        """Search TripAdvisor places."""
+        """Search TripAdvisor and return up to ten ranked activity candidates."""
         if not query or not query.strip():
             raise ActivityAPIError("Search query is required.")
 
         params = self._build_search_params(query, location)
         data = await self._make_request(params)
-        return self._parse_search(data)
+        places = self._parse_search(data)
+
+        # Rank all valid results before truncating, so a highly rated place
+        # near the end of SerpAPI's response can still reach the selection LLM.
+        # Missing/non-finite ratings rank last; review count breaks rating ties.
+        # Equal scores keep the provider's original order (Python's stable sort).
+        ranked = sorted(
+            places,
+            key=lambda place: (
+                place.rating if place.rating is not None and isfinite(place.rating) else -1,
+                place.reviews if place.reviews is not None else 0,
+            ),
+            reverse=True,
+        )
+        candidates = ranked[:10]
+        logger.info("Shortlisted %d of %d activities for selection.", len(candidates), len(places))
+        return candidates
 
     def _build_search_params(self, query: str, location: str | None = None) -> dict:
         """Build TripAdvisor search request parameters."""
